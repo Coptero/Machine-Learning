@@ -1,0 +1,5 @@
+rrcf==0.3.2
+pandas==0.25.1
+seaborn==0.9.0
+numpy==1.17.2
+json==2.0.9
