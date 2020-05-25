@@ -1,5 +1,5 @@
 rrcf==0.4
-pandas==0.25.1
+pandas==0.24.2
+numpy==1.14.5
 seaborn==0.9.0
-numpy==1.17.2
-
+boto3==1.13.16
