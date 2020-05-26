@@ -112,7 +112,6 @@ def optimal_fbeta_gradient(anomaly_scores, incidents, prev_points, resolved_diff
     threshold_values.append(threshold)
     fbeta_score_values.append(fbeta_score_value)
     error_values.append(error)
-    # print('Iteración número {}, threshold: {}, error: {}'.format(1, threshold, error))
     prev_threshold = threshold
     prev_error = error
     threshold = threshold + lr
@@ -133,11 +132,9 @@ def optimal_fbeta_gradient(anomaly_scores, incidents, prev_points, resolved_diff
         if (error - prev_error) == 0:
             prev_threshold = threshold
             prev_error = error
-            # print('Iteración número {}, threshold: {}, error: {}'.format(iteration, threshold, error))
             threshold = threshold + 0.1
         else:
             grad = (error - prev_error) / (threshold - prev_threshold)
-            # print('Iteración número {}, threshold: {}, error: {}'.format(iteration, threshold, error))
             prev_threshold = threshold
             prev_error = error
             threshold = threshold - lr * grad

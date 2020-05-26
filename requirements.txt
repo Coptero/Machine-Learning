@@ -3,3 +3,4 @@ pandas==0.24.2
 numpy==1.14.5
 seaborn==0.9.0
 boto3==1.13.16
+
