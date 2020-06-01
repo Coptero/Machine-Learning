@@ -14,6 +14,25 @@ class AnomalyScorer:
         self.bucket = bucket
         self.key = key
         self.forest = self.create_forest()
+        self.statistic_threshold = self.get_statistic_threshold()
+        self.incident_threshold = self.get_incident_threshold()
+
+    def get_statistic_threshold(self):
+        s3 = boto3.resource('s3')
+        obj = s3.Object(self.bucket, self.key)
+        data_dict = json.load(obj.get()['Body'])
+        statistic_threshold = data_dict["statistic_threshold"]
+        return statistic_threshold
+
+    def get_incident_threshold(self):
+        s3 = boto3.resource('s3')
+        obj = s3.Object(self.bucket, self.key)
+        data_dict = json.load(obj.get()['Body'])
+        if "incident_threshold" in data_dict.keys():
+            incident_threshold = data_dict["incident_threshold"]
+        else:
+            incident_threshold = float("inf")
+        return incident_threshold
 
     def create_forest(self):
         """
@@ -23,13 +42,14 @@ class AnomalyScorer:
         """
         s3 = boto3.resource('s3')
         obj = s3.Object(self.bucket, self.key)
-        forest_dict = json.load(obj.get()['Body'])
+        data_dict = json.load(obj.get()['Body'])
         forest = []
-        for i in range(len(forest_dict)):
+        for i in range(len(data_dict)):
             key_name = "tree_" + str(i + 1)
-            new_tree = rrcf.RCTree()
-            new_tree.load_dict(forest_dict[key_name])
-            forest.append(new_tree)
+            if key_name in data_dict.keys():
+                new_tree = rrcf.RCTree()
+                new_tree.load_dict(data_dict[key_name])
+                forest.append(new_tree)
         return forest
 
     def score_point(self, point_value, point_index):
@@ -45,5 +65,7 @@ class AnomalyScorer:
             tree.insert_point(point_value, index=point_index)
             point_codisp += tree.codisp(point_index)
             tree.forget_point(point_index)
-        point_score = point_codisp / len(self.forest)
-        return point_score
+        point_score = round(point_codisp / len(self.forest), 2)
+        statistic_alarm = float(point_score > self.statistic_threshold)
+        incident_alarm = float(point_score > self.incident_threshold)
+        return point_score, statistic_alarm, incident_alarm
