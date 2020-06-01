@@ -13,19 +13,20 @@ class AnomalyScorer:
         """
         self.bucket = bucket
         self.key = key
+        self.session = boto3.Session(profile_name="coptero")
         self.forest = self.create_forest()
         self.statistic_threshold = self.get_statistic_threshold()
         self.incident_threshold = self.get_incident_threshold()
 
     def get_statistic_threshold(self):
-        s3 = boto3.resource('s3')
+        s3 = self.session.resource('s3')
         obj = s3.Object(self.bucket, self.key)
         data_dict = json.load(obj.get()['Body'])
         statistic_threshold = data_dict["statistic_threshold"]
         return statistic_threshold
 
     def get_incident_threshold(self):
-        s3 = boto3.resource('s3')
+        s3 = self.session.resource('s3')
         obj = s3.Object(self.bucket, self.key)
         data_dict = json.load(obj.get()['Body'])
         if "incident_threshold" in data_dict.keys():
@@ -40,7 +41,7 @@ class AnomalyScorer:
         :param forest_dict: Dictionary conatining Robust Random Cut Trees.
         :return: Forest consisting in a list of Robust Random Cut Trees.
         """
-        s3 = boto3.resource('s3')
+        s3 = self.session.resource('s3')
         obj = s3.Object(self.bucket, self.key)
         data_dict = json.load(obj.get()['Body'])
         forest = []
