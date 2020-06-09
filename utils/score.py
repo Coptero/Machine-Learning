@@ -7,9 +7,10 @@ class AnomalyScorer:
 
     def __init__(self, bucket, key):
         """
-        Constructor of the class.
-        :param bucket: S3 bucket name where the json is stored.
-        :param key: S3 resource key of the json file.
+        Constructor of the class. Initializes an AWS session and calls getter
+        methods for retrieving the forest and thresholds.
+        :param bucket: S3 bucket name were the json file is stored.
+        :param key: Json file's key identifier inside the bucket.
         """
         self.bucket = bucket
         self.key = key
@@ -19,6 +20,10 @@ class AnomalyScorer:
         self.incident_threshold = self.get_incident_threshold()
 
     def get_statistic_threshold(self):
+        """
+        Retrieves the statistic threshold from the json file.
+        :return: Statistic threshold value.
+        """
         s3 = self.session.resource('s3')
         obj = s3.Object(self.bucket, self.key)
         data_dict = json.load(obj.get()['Body'])
@@ -26,6 +31,11 @@ class AnomalyScorer:
         return statistic_threshold
 
     def get_incident_threshold(self):
+        """
+        Retrieves the threshold calculated with the registered incidents from the json. When it
+        is not present in the file, it takes an infinite value.
+        :return: Incident threshold  value.
+        """
         s3 = self.session.resource('s3')
         obj = s3.Object(self.bucket, self.key)
         data_dict = json.load(obj.get()['Body'])
@@ -38,7 +48,6 @@ class AnomalyScorer:
     def create_forest(self):
         """
         Converts a dictionary containing Robust Random Cut Trees into a forest of them.
-        :param forest_dict: Dictionary conatining Robust Random Cut Trees.
         :return: Forest consisting in a list of Robust Random Cut Trees.
         """
         s3 = self.session.resource('s3')
@@ -55,11 +64,11 @@ class AnomalyScorer:
 
     def score_point(self, point_value, point_index):
         """
-        Scores a point using Collusive Diplacement measure.
-        :param point_value: Numeric value of the point.
-        :param point_index: Index to identify the point. May be an string or a number.
-        :param forest: List of Robust Random Cut Trees.
-        :return: Score of the point.
+        Scores a point using the Collusive Displacement measure.
+        :param point_value: Numeric value to score.
+        :param point_index: Identifier value for the point. Usually a date.
+        :return: Tuple with the anomaly score, and two binary values that tell whether the scored point represents
+        an anomaly for any of the thresholds.
         """
         point_codisp = 0
         for tree in self.forest:

@@ -1,3 +1,4 @@
+from __future__ import division
 import datetime
 import numpy as np
 import rrcf
